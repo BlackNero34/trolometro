@@ -1,0 +1,127 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Contador en Tiempo Real</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: sans-serif;
+      background: url('background.jpg') no-repeat center center fixed;
+      background-size: cover;
+      color: white;
+    }
+
+    h1 {
+      text-align: center;
+      margin-top: 20px;
+      font-size: 2rem;
+      background: linear-gradient(to right, red, orange, yellow, green, blue, violet);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .container {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      max-width: 600px;
+      margin: auto;
+      gap: 10px;
+      padding: 20px;
+      background-color: rgba(0,0,0,0.5);
+      border-radius: 10px;
+    }
+
+    .row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: linear-gradient(90deg, red, orange, yellow, green, blue, violet);
+      padding: 10px;
+      border-radius: 10px;
+      margin-bottom: 10px;
+    }
+
+    .name {
+      font-weight: bold;
+    }
+
+    .controls {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    button {
+      padding: 5px 10px;
+      font-size: 1rem;
+      cursor: pointer;
+    }
+
+    .value {
+      min-width: 30px;
+      text-align: center;
+      font-size: 1.2rem;
+    }
+  </style>
+</head>
+<body>
+  <h1>Contador en Tiempo Real</h1>
+  <div class="container" id="counter-container">
+    <!-- Aquí se insertarán los contadores -->
+  </div>
+
+  <script type="module">
+    // Importar desde Firebase CDN
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
+    import { getDatabase, ref, onValue, set } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-database.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyABuSAIfH31NZvg2asYtWftZNZF7WotLWg",
+      authDomain: "trolometro.firebaseapp.com",
+      databaseURL: "https://trolometro-default-rtdb.firebaseio.com",
+      projectId: "trolometro",
+      storageBucket: "trolometro.firebasestorage.app",
+      messagingSenderId: "720953361364",
+      appId: "1:720953361364:web:377cafe1ac7f8a85a2cc41",
+      measurementId: "G-KPH6DYBKBF"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+
+    const names = ["Nico", "Adrian", "Lucas", "Franco"];
+    const container = document.getElementById("counter-container");
+
+    names.forEach(name => {
+      const row = document.createElement("div");
+      row.className = "row";
+      row.innerHTML = \`
+        <div class="name">\${name}</div>
+        <div class="controls">
+          <button onclick="updateCount('\${name}', -1)">-</button>
+          <div class="value" id="value-\${name}">0</div>
+          <button onclick="updateCount('\${name}', 1)">+</button>
+        </div>
+      \`;
+      container.appendChild(row);
+
+      const valueRef = ref(db, 'counters/' + name);
+      onValue(valueRef, (snapshot) => {
+        const val = snapshot.val();
+        document.getElementById("value-" + name).textContent = val ?? 0;
+      });
+    });
+
+    window.updateCount = (name, delta) => {
+      const valueRef = ref(db, 'counters/' + name);
+      onValue(valueRef, (snapshot) => {
+        let current = snapshot.val() ?? 0;
+        set(valueRef, current + delta);
+      }, { onlyOnce: true });
+    };
+  </script>
+</body>
+</html>
